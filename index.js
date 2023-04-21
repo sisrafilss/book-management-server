@@ -22,9 +22,16 @@ async function run() {
     await client.connect();
 
     const database = client.db("book_management");
-    const taskList = database.collection("bookList");
+    const bookCollection = database.collection("bookList");
 
-    console.log("DB connected successfully");
+    // POST - Add a book to book list
+    app.post("/add-book", async (req, res) => {
+      const book = req.body;
+
+      console.log(book);
+      const result = await bookCollection.insertOne(book);
+      res.json(result);
+    });
   } finally {
     // await client.close();
   }
