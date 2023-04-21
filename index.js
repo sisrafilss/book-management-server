@@ -27,10 +27,18 @@ async function run() {
     // POST - Add a book to book list
     app.post("/add-book", async (req, res) => {
       const book = req.body;
-
-      console.log(book);
       const result = await bookCollection.insertOne(book);
       res.json(result);
+    });
+
+    // GET All Books
+    app.get("/all-books", async (req, res) => {
+      const email = req.params.email;
+
+      // const cursor = taskList.find({ email: email });
+      const cursor = bookCollection.find();
+      const books = await cursor.toArray();
+      res.json(books);
     });
   } finally {
     // await client.close();
