@@ -12,6 +12,8 @@ This is the simple `Express.js` server of Book Management Application. This serv
 
 - An authorized user with an admin role can add a new book, delete a book, and promote another registered user to admin.
 
+- To check the the admin functionality please use Email: admin@gmail.com and Password: 123456
+
 ## Technologies
 
 - The frontend of this application is built using `ReactJS`, `Bootstrap`, and `CSS`.
