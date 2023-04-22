@@ -23,6 +23,7 @@ async function run() {
 
     const database = client.db("book_management");
     const bookCollection = database.collection("bookList");
+    const userCollection = database.collection("userList");
 
     // POST - Add a book to book list
     app.post("/add-book", async (req, res) => {
@@ -41,14 +42,90 @@ async function run() {
       res.json(books);
     });
 
-     // Delete - Delete a book
-     app.delete("/delete-book/:id", async (req, res) => {
+    // Delete - Delete a book
+    app.delete("/delete-book/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await bookCollection.deleteOne(query);
       res.json(result);
     });
 
+    // POST - Add user data to Database
+    app.post("/users", async (req, res) => {
+      const newUser = req.body;
+      newUser.role = "user";
+      const result = await userCollection.insertOne(newUser);
+      res.json(result);
+    });
+
+    // PUT - Update user data to database for third party login system
+    app.put("/users", async (req, res) => {
+      const userData = req.body;
+
+      const query = { email: userData.email };
+      const userStatus = await userCollection.findOne(query);
+
+      if (userStatus) {
+        res.json(userStatus);
+      } else {
+        userData.role = "user";
+        const filter = { email: userData.email };
+        const options = { upsert: true };
+        const updateDoc = { $set: userData };
+        const result = await userCollection.updateOne(
+          filter,
+          updateDoc,
+          options
+        );
+        res.json(result);
+      }
+    });
+
+    // GET a single user data
+    app.get("/users/:email", async (req, res) => {
+      const email = req.params.email;
+      // console.log("Email", email);
+      if (email) {
+        const query = { email };
+        const user = await userCollection.findOne(query);
+        // console.log(user);
+        res.json(user);
+      }
+    });
+
+    // PUT - Set an user role as admin
+    app.put("/make-admin/:email", async (req, res) => {
+      const email = req.params.email;
+
+      // check user status
+      const query = { email };
+      const user = await userCollection.findOne(query);
+      if (user?.role === "admin") {
+        const filter = req.body;
+        // console.log("filter", filter);
+        const updateDoc = {
+          $set: {
+            role: "admin",
+          },
+        };
+        const result = await userCollection.updateOne(filter, updateDoc);
+
+        // console.log(result);
+
+        if (result.modifiedCount) {
+          res.json({ status: 200, message: "User status changed to Admin" });
+        } else if (result.matchedCount) {
+          res.json({ status: 502, message: "User Already an Admin" });
+        } else {
+          res.json({ status: 502, message: "User not Found!" });
+        }
+      } else {
+        res.json({
+          status: 400,
+          message: "You are not allowed to perform this operation",
+        });
+      }
+    });
   } finally {
     // await client.close();
   }
